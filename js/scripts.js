@@ -2,6 +2,7 @@ function GameManager() {
   this.player1Active  = true;
   this.spaces = [];
   this.players = [];
+  this.remainingSpaces = [];
 }
 
 function Player(name) {
@@ -11,7 +12,6 @@ function Player(name) {
 }
 
 GameManager.prototype.addPlayer = function(player) {
-  console.log(player)
   this.players.push(player)
 }
 
@@ -19,6 +19,7 @@ GameManager.prototype.createSpaces = function() {
   for(var i = 1; i <= 9; i++) {
     var space = new Space(i)
     this.spaces.push(space);
+    this.remainingSpaces.push(space.id);
   }
 }
 
@@ -29,16 +30,32 @@ GameManager.prototype.markSpace = function(id) {
       currentSpace.markX();
       $("#" + id + " .mark").text("X");
       this.players[0].spaces.push(id);
+      delete this.remainingSpaces[(this.remainingSpaces.indexOf(id))];
       this.players[0].checkVictory();
+      this.player1Active = !this.player1Active;
+      this.computerTurn();
     } else {
       currentSpace.markO();
       $("#" + id + " .mark").text("O");
       this.players[1].spaces.push(id);
+      delete this.remainingSpaces[(this.remainingSpaces.indexOf(id))];
       this.players[1].checkVictory();
+      this.player1Active = !this.player1Active;
     }
-    this.player1Active = !this.player1Active;
+
     currentSpace.isMarked = true;
   }
+}
+
+GameManager.prototype.computerTurn = function() {
+  var remainingIndexes = []
+  for(var i = 0; i < this.remainingSpaces.length; i++) {
+    if(this.remainingSpaces[i]) {
+      remainingIndexes.push(this.remainingSpaces[i]);
+    }
+  }
+  var randomIndex = Math.floor(Math.random() * (remainingIndexes.length - 1)) + 1;
+  this.markSpace(this.remainingSpaces[this.remainingSpaces.indexOf(remainingIndexes[randomIndex])]);
 }
 
 Player.prototype.checkVictory = function() {
@@ -51,8 +68,8 @@ Player.prototype.checkVictory = function() {
         victory++;
       }
     }
+
     if(victory === 3) {
-      console.log("victory");
       $(".game-container").hide();
       $("h1").show();
       $("h1").text("Congrats!!! " + this.name + " You win!");
@@ -62,7 +79,6 @@ Player.prototype.checkVictory = function() {
 
 GameManager.prototype.findSpace = function(id) {
   for (var i = 0; i < this.spaces.length; i++) {
-    console.log(this.spaces[i].id)
     if(id === this.spaces[i].id) {
       return this.spaces[i];
     }
